@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <title>Member categories</title>
+
+  <style type="text/css" media="screen,print">@import url("docs.css");</style>
+<META http-equiv=Content-Type content="text/html; charset=utf-8"></head>
+
+<body>
+<div><a name="top"></a></div>
+
+<div id="header">
+<table cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr>
+<td class="docheading" style="width:300px;"><h1 style="font-size: 18px; font-weight: bold;">intoEEtive.com</h1></td>
+<td class="searchbox">
+
+</td>
+</tr>
+</table>
+</div>
+
+
+<div id="navlinks">
+<a href="http://www.intoeetive.com/">intoEEtive.com</a> &gt;
+<a href="http://www.intoeetive.com/index.php/category/extending_ee">EE add-ons</a> &gt;
+<a href="http://www.intoeetive.com/index.php/comments/member-categories">Member categories</a>
+</div>
+
+
+<div id="content">
+
+	<h1>Member categories</h1>
+
+	<p>The obvious limitation of ExpressioEngine membership system is that a member can be part of only one membership group. With Member categories, you can assign multiple categories to your members. Categories used are the channel categories, so you can easily relate "groups" of members to "groups" of entries.</p>
+
+<p>Features:</p>
+
+	<ul>
+
+        <li><a href="#member">Display members belonging to category</a></li>
+        <li><a href="#categories">Display categories assigned to member</a></li>
+        <li><a href="#check">Check whether a member belongs to certain category</a></li>
+        <li><a href="#related">Display entries from member's category</a></li>
+        <li><a href="#assign">Assign categories on backend and frontend</a></li>
+        
+	</ul>
+
+	<h2>Settings</h2>
+
+<p>Before using Member categories, you should select in module settings what category groups you want to be applicable for members. You can also optionally choose to automatically assign parent category for member, if the child category is assigned. 
+</p>
+<p>Note that if you're using MSM you'll have to provide settings for each site separately.</p>
+
+	<h2><a name="member"></a>Display members belonging to category</h2>
+
+<p><strong>{exp:member_categories:members category_id="1"}</strong></p>
+<p>Example:
+<code>Members in this category<br />
+{exp:member_categories:members category_url_title="{segment_3}" backspace="1"}<br />
+&lt;a href="{path=profile/{username}}"&gt;{screen_name}&lt;/a&gt;, <br />
+{if no_results}none{/if}<br />
+{paginate}{pagination_links}{/paginate}<br />
+{/exp:member_categories:members}
+</code>
+</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>category_id</strong> - the ID of category to get members</li>
+<li><strong>category_url_title</strong> - URL title of category</li>
+<li><strong>custom_fields="yes"</strong> - if set to "yes", will also fetch all custom profile fields data for each member</li>
+<li><strong>backspace</strong> - number of character to be removed from the end of tag contents on last iteration</li>
+<li><strong>errors="off"</strong> - if specified, all error messages will be suppressed</li>
+<li><strong>limit</strong> - number of records per page (omit to disable pagination)</li>
+<li><strong>order_by</strong> - field to order by. Any field from exp_members database table can be used. Defaults to member_id</li>
+<li><strong>sort</strong> - sorting direction (asc, desc)</li>
+<li><strong>paginate="top"</strong> - defines where pagination links should be displayed. Possible values: 'top', 'bottom', 'both' (defaults to bottom)</li>
+</ul>
+<p class="important">You MUST provide either category_id OR category_url_title</p>
+<p>Variables (all having the same meaning that in member profile tag):</p>
+<ul>
+<li><strong>member_id</strong></li>
+<li><strong>username</strong></li>
+<li><strong>screen_name</strong></li>
+<li><strong>email</strong></li>
+<li><strong>url</strong></li>
+<li><strong>location</strong></li>
+<li><strong>occupation</strong></li>
+<li><strong>interests</strong></li>
+<li><strong>aol_im</strong></li>
+<li><strong>yahoo_im</strong></li>
+<li><strong>msn_im</strong></li>
+<li><strong>icq</strong></li>
+<li><strong>bio</strong></li>
+<li><strong>signature</strong></li>
+<li><strong>ip_address</strong></li>
+<li><strong>birthday</strong></li>
+<li><strong>avatar_url</strong></li>
+<li><strong>avatar_width</strong></li>
+<li><strong>avatar_height</strong></li>
+<li><strong>photo_url</strong></li>
+<li><strong>photo_image_width</strong></li>
+<li><strong>photo_image_height</strong></li>
+<li><strong>signature_image_url</strong></li>
+<li><strong>signature_image_width</strong></li>
+<li><strong>signature_image_height</strong></li>
+<li><strong>join_date format="%Y-%m-%d"</strong></li>
+<li><strong>last_visit format="%Y-%m-%d"</strong></li>
+<li><strong>last_activity format="%Y-%m-%d"</strong></li>
+<li><strong>my_custom_profile_field</strong> - custom profile fields are also available if you set parameter custom_fields="yes"</li>
+<li><strong>total_results</strong> - overall number of categories to be displayed</li>
+<li><strong>count</strong> - counter for each iteration (resets on every page)</li>
+<li><strong>absolute_count</strong> - counter for each iteration (continuos thoughout pages)</li>
+<li><strong>{if no_results}...{/if}</strong>  - text to display if there are no results</li>
+<li><strong>{paginate}{pagination_links}{/paginate}</strong>  - pagination links</li>
+</ul>
+
+
+	<h2><a name="categories"></a>Display categories assigned to member</h2>
+
+<p><strong>{exp:member_categories:categories member_id="1"}</strong></p>
+<p>Example:
+<code>This member belongs to categories:<br />
+{exp:member_categories:categories username="{segment_3}" backspace="1"}<br />
+&lt;a href="{path=category/{category_url_title}}"&gt;{category_name}&lt;/a&gt;, <br />
+{if no_results}none{/if}<br />
+{/exp:member_categories:categories}
+</code>
+</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>member_id</strong> - the ID of member to get categories. Defaults to logged in member ID.</li>
+<li><strong>username</strong> - ... or username</li>
+<li><strong>custom_fields="yes"</strong> - if set to "yes", will also fetch all custom profile fields data for each member</li>
+<li><strong>category_group</strong> - you can restrict output to display only categories from certain groups. Provide one or several group IDs (seperate multiple values with a pipe, ex. category_group="2|3|12")</li>
+<li><strong>backspace</strong> - number of character to be removed from the end of tag contents on last iteration</li>
+<li><strong>order_by="order"</strong> - sort categories by category order. If omited, they will be sorted by category name</li>
+<li><strong>sort</strong> - sorting direction (asc, desc)</li>
+<li><strong>errors="off"</strong> - if specified, all error messages will be suppressed</li>
+</ul>
+<p>Variables (all having the same meaning that in channel categories tag):</p>
+<ul>
+<li><strong>category_id</strong></li>
+<li><strong>category_name</strong></li>
+<li><strong>category_url_title</strong></li>
+<li><strong>category_image</strong></li>
+<li><strong>category_description</strong></li>
+<li><strong>parent_id</strong></li>
+<li><strong>category_group</strong> - ID of category group</li>
+<li><strong>my_custom_profile_field</strong> - custom profile fields are also available if you set parameter custom_fields="yes"</li>
+<li><strong>total_results</strong> - overall number of categories to be displayed</li>
+<li><strong>count</strong> - counter for each iteration</li>
+<li><strong>{if no_results}...{/if}</strong>  - text to display if there are no results</li>
+</ul>
+
+
+
+	<h2><a name="check"></a>Check whether a member belongs to certain category</h2>
+
+<p><strong>{exp:member_categories:check member_id="1" category_url_title="{segment_3}"}</strong></p>
+<p>Example:
+<code>
+{exp:member_categories:check username="{segment_3}" category_id="1"}<br />
+The member belongs to the category<br />
+{if no_results}The member does NOT belong to the category{/if}<br />
+{/exp:member_categories:check}<br />
+</code>
+</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>member_id</strong> - the ID of member to check.  Defaults to logged in member ID.</li>
+<li><strong>username</strong> - ... or username</li>
+<li><strong>category_id</strong> - the ID of category to check</li>
+<li><strong>category_url_title</strong> - ... or URL tite</li>
+<li><strong>errors="off"</strong> - if specified, all error messages will be suppressed</li>
+</ul>
+<p class="important">You MUST provide category_id (or category_url_title)</p>
+<p>You can also pass multiple category IDs to check whether member belong to at least one category. Use pipe (|) separator for category_id parameter. E.g. <em>category_id="1|7|12"</em></p>
+<p>The contents of tag pair will be returned if there is a match between member and category. Otherwise the contents of {if no_results} block will be returned. No additional variables are available.</p>
+
+
+
+
+
+	<h2><a name="related"></a>Display entries from member's category</h2>
+
+<p>To display entries from the same category that member belongs to, you can use combination of {exp:member_categories:categories} and {exp:channel:entries} tags.</p>
+
+<code>
+{exp:member_categories:categories username="{segment_3}"}<br />
+Category: {category_name}, entries:<br /> 
+{exp:channel:entries category="{category_id}" dynamic="no" backspace="1"}
+&lt;a href="{path=view/{url_title}}"&gt;{title}&lt;/a&lt;, <br />
+{if no_results}none{/if}<br />
+{/exp:channel:entries}<br />
+{if no_results}none{/if}<br />
+{/exp:member_categories:categories}
+</code>
+
+
+	<h2><a name="assign"></a>Assign categories on backend and frontend</h2>
+
+<p>From the module control panel, you can assign any number of categories to member by checking the appropriate checkboxes. Just like you do with categories for entries.</p>
+<p>Note that if you're using MSM only category groups for current site are displayed (and only those defined in settings).</p>
+
+<p>If you have <a href="http://www.intoeetive.com/index.php/comments/member-categories">Member categories</a> module installed, you can use SA Member Edit to enable users editing their categories on the frontend.</p>
+<p>To assign categories from the front-end, place <strong>{exp:member_categories:form}</strong> tag pair somewhere in your templates. The tag pair has only one variable &mdash; <strong>{categories}</strong>, which return pre-formatted list of categories checkboxes. If you want to edit the way categories are displayed, you need to edit categories_edit.php file in views folder.</p>
+<p>You can also edit categories using <a href="http://www.intoeetive.com/index.php/comments/stand-alone-member-edit">Stand-Alone Member Edit</a> module</p>
+<code>
+My categories:<br />
+{exp:member_categories:form}<br />
+{categories}<br />
+&lt;input type="submit" value="Save" /&gt;<br />
+{/exp:member_categories:form}
+</code>
+
+</div>
+
+
+<p class="center"><a href="#top">Top of page</a></p>
+
+<!-- {user_guide_comments} -->
+
+<div id="footer">
+  <address>Copyright &copy; 2011-2012 Yuri Salimovskiy <a href="http://www.intoeetive.com/">intoEEtive.com</a></address>
+</div>
+
+</body>
+</html>
