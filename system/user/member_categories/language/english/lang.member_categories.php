@@ -33,7 +33,7 @@ $lang = array(
 "The member specified does not exist",
 
 "categories_assigned" =>
-"The categories have been assigned to member",
+"The categories have been assigned to members",
 
 "category_groups" =>
 "Use categories from these groups:",
@@ -76,6 +76,15 @@ $lang = array(
 
 "do_selection" =>
 "Select members and categories",
+
+'assign'    =>
+'Assign categories',
+
+'assign_to_members'    =>
+'Assign categories to members',
+
+'no_member_selected' =>
+'No members have been selected for edit',
 
 /* END */
 ''=>''

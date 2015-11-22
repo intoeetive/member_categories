@@ -52,7 +52,7 @@ class Member_categories {
         {
             if ($this->EE->TMPL->fetch_param('category_id')!='')
             {
-                $category_id = $this->EE->TMPL->fetch_param('category_id');
+                $category_id_a = explode("|",$this->EE->TMPL->fetch_param('category_id'));
             }
             else if ($this->EE->TMPL->fetch_param('category_url_title')!='')
             {
@@ -67,7 +67,7 @@ class Member_categories {
                     }
                     return $this->EE->output->show_user_error('general', array($this->EE->lang->line('category_does_not_exist')));
                 }
-                $category_id = $q->row('cat_id');
+                $category_id_a = array($q->row('cat_id'));
             }
             else
             {
@@ -78,6 +78,10 @@ class Member_categories {
                 return $this->EE->output->show_user_error('general', array($this->EE->lang->line('no_category_provided')));
             }
         }
+        else
+        {
+            $category_id_a = explode("|",$category_id);
+        }
         
         $start = 0;
         $paginate = ($this->EE->TMPL->fetch_param('paginate')=='top')?'top':(($this->EE->TMPL->fetch_param('paginate')=='both')?'both':'bottom');
@@ -85,7 +89,7 @@ class Member_categories {
         {
             $this->EE->db->select('COUNT(*) AS cnt');
             $this->EE->db->from('exp_category_members');
-            $this->EE->db->where('cat_id', $category_id);
+            $this->EE->db->where_in('cat_id', $category_id_a);
             $q = $this->EE->db->get();
             $total_results = $q->row('cnt');
             $limit = intval($this->EE->TMPL->fetch_param('limit'));
@@ -124,7 +128,7 @@ class Member_categories {
         {
             $this->EE->db->join('exp_member_data', 'exp_members.member_id=exp_member_data.member_id', 'left');
         }
-        $this->EE->db->where('cat_id', $category_id);
+        $this->EE->db->where_in('cat_id', $category_id_a);
         $sort = ($this->EE->TMPL->fetch_param('sort')=='desc')?'desc':'asc';
         $order = ($this->EE->TMPL->fetch_param('order_by')!='')?$this->EE->TMPL->fetch_param('order_by'):'member_id';
         $this->EE->db->order_by('exp_members.'.$order, $sort);
@@ -284,40 +288,8 @@ class Member_categories {
             $out = substr($out, 0, - $backspace);
         }
         
-        if ($total_results > $q->num_rows())
-        {
-            $this->EE->load->library('pagination');
+        $out = $this->_process_pagination($total_results, $limit, $start, $basepath, $out, $paginate, $paginate_tagdata);
 
-			$config['base_url']		= $basepath;
-			$config['prefix']		= 'P';
-			$config['total_rows'] 	= $total_results;
-			$config['per_page']		= $limit;
-			$config['cur_page']		= $start;
-			$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-			$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-
-			$this->EE->pagination->initialize($config);
-			$pagination_links = $this->EE->pagination->create_links();	
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-        }
-        else
-        {
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-        }
-        
-        switch ($paginate)
-        {
-            case 'top':
-                $out = $paginate_tagdata.$out;
-                break;
-            case 'both':
-                $out = $paginate_tagdata.$out.$paginate_tagdata;
-                break;
-            case 'bottom':
-            default:
-                $out = $out.$paginate_tagdata;
-        }
-        
         return $out;
     }
     
@@ -329,11 +301,11 @@ class Member_categories {
             {
                 if ($this->EE->TMPL->fetch_param('member_id')=='{member_id}' || $this->EE->TMPL->fetch_param('member_id')=='{logged_in_member_id}')
                 {
-                    $member_id = $this->EE->session->userdata('member_id');
+                    $member_id_a = array($this->EE->session->userdata('member_id'));
                 }
                 else
                 {
-                    $member_id = $this->EE->TMPL->fetch_param('member_id');
+                    $member_id_a = explode("|", $this->EE->TMPL->fetch_param('member_id'));
                 }
             }
             else if ($this->EE->TMPL->fetch_param('username')!='')
@@ -349,11 +321,11 @@ class Member_categories {
                     }
                     return $this->EE->output->show_user_error('general', array($this->EE->lang->line('member_does_not_exist')));
                 }
-                $member_id = $q->row('member_id');
+                $member_id_a = array($q->row('member_id'));
             }
             else if ($this->EE->session->userdata('member_id')!=0)
             {
-                $member_id = $this->EE->session->userdata('member_id');
+                $member_id_a = array($this->EE->session->userdata('member_id'));
             }
             else
             {
@@ -363,6 +335,10 @@ class Member_categories {
                 }
                 return $this->EE->output->show_user_error('general', array($this->EE->lang->line('no_member_provided')));
             }
+        }
+        else
+        {
+            $member_id_a = explode("|", $member_id);
         }
         
         if ($this->EE->TMPL->fetch_param('custom_fields')=='yes')
@@ -388,7 +364,7 @@ class Member_categories {
         {
             $this->EE->db->join('exp_category_field_data', 'exp_categories.cat_id=exp_category_field_data.cat_id', 'left');
         }
-        $this->EE->db->where('member_id', $member_id);
+        $this->EE->db->where_in('member_id', $member_id_a);
         if ($this->EE->TMPL->fetch_param('category_group')!='') 
         {
             $category_group_a = explode('|', $this->EE->TMPL->fetch_param('category_group'));
@@ -597,7 +573,7 @@ class Member_categories {
 	            $i++;
 	            $categories[$category_array[0]]->name = $category_array[1];
 	            $categories[$category_array[0]]->selected = $category_array[4];
-	            $level = $category_array[5];
+	            $level = (int)$category_array[5];
 	            $categories[$category_array[0]]->start_tag = 0;
 	            $categories[$category_array[0]]->end_tag = 0;
 	            $categories[$category_array[0]]->last_tag = 0;
@@ -747,6 +723,101 @@ class Member_categories {
 			
 		$this->EE->output->show_message($data);
     }    
+    
+    
+    function find_members()
+    { 
+        $str = urldecode($this->EE->input->get_post('q'));
+        if (strlen($str)<3)
+        {
+            exit();
+        }
+        $this->EE->db->select('member_id, screen_name');
+        $this->EE->db->from('members');
+        $this->EE->db->where('screen_name LIKE "%'.$str.'%"');
+        $q = $this->EE->db->get();
+        $out = '';
+        foreach ($q->result_array() as $row)
+        {
+            $out .= $row['member_id']."=".$row['screen_name']."\n";
+        }
+        echo trim($out);
+        exit();
+    }
+    
+    
+    function _process_pagination($total, $perpage, $start, $basepath='', $out='', $paginate='bottom', $paginate_tagdata='')
+    {
+        if (version_compare(APP_VER, '2.4.0', '>='))
+		{
+	        $this->EE->load->library('pagination');
+	        if (version_compare(APP_VER, '2.6.0', '>='))
+	        {
+	        	$pagination = $this->EE->pagination->create(__CLASS__);
+	        }
+	        else
+	        {
+	        	$pagination = new Pagination_object(__CLASS__);
+	        }
+            if (version_compare(APP_VER, '2.8.0', '>='))
+            {
+                $this->EE->TMPL->tagdata = $pagination->prepare($this->EE->TMPL->tagdata);
+                $pagination->build($total, $perpage);
+            }
+            else
+            {
+                $pagination->get_template();
+    	        $pagination->per_page = $perpage;
+    	        $pagination->total_rows = $total;
+    	        $pagination->offset = $start;
+    	        $pagination->build($pagination->per_page);
+            }
+	        
+	        $out = $pagination->render($out);
+  		}
+  		else
+  		{
+        
+	        if ($total > $perpage)
+	        {
+	            $this->EE->load->library('pagination');
+	
+				$config['base_url']		= $basepath;
+				$config['prefix']		= 'P';
+				$config['total_rows'] 	= $total;
+				$config['per_page']		= $perpage;
+				$config['cur_page']		= $start;
+				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
+				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
+	
+				$this->EE->pagination->initialize($config);
+				$pagination_links = $this->EE->pagination->create_links();	
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
+	        }
+	        else
+	        {
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
+	        }
+	        
+	        switch ($paginate)
+	        {
+	            case 'top':
+	                $out = $paginate_tagdata.$out;
+	                break;
+	            case 'both':
+	                $out = $paginate_tagdata.$out.$paginate_tagdata;
+	                break;
+	            case 'bottom':
+	            default:
+	                $out = $out.$paginate_tagdata;
+	        }
+	        
+    	}
+        
+        return $out;
+    }
+    
+        
 
 }
 /* END */

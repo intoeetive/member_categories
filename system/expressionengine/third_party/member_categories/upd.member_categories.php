@@ -73,6 +73,12 @@ class Member_categories_upd {
         
         $data = array( 'module_name' => 'Member_categories' , 'module_version' => $this->version, 'has_cp_backend' => 'y', 'has_publish_fields' => 'n', 'settings'=> serialize($settings) ); 
         $this->EE->db->insert('modules', $data); 
+        
+        $data = array( 'class' => 'Member_categories' , 'method' => 'categories_save' ); 
+        $this->EE->db->insert('actions', $data); 
+        
+        $data = array( 'class' => 'Member_categories' , 'method' => 'find_members' ); 
+        $this->EE->db->insert('actions', $data); 
     
         return TRUE; 
         
@@ -109,9 +115,10 @@ class Member_categories_upd {
             $this->EE->db->insert('actions', $data); 
         } 
         
-        if ($current < 1.5)
+        if ($current < 1.6)
         {
-        
+            $data = array( 'class' => 'Member_categories' , 'method' => 'find_members' ); 
+            $this->EE->db->insert('actions', $data); 
         }
 		
         return TRUE; 

@@ -34,6 +34,8 @@ class Member_categories_mcp {
     
     var $perpage = 50;
     
+    var $member_limit = 100;
+    
     function __construct() { 
         // Make a local reference to the ExpressionEngine super object 
         $this->EE =& get_instance(); 
@@ -218,8 +220,15 @@ class Member_categories_mcp {
 		$this->EE->pagination->initialize($p_config);
         
 		$vars['pagination'] = $this->EE->pagination->create_links();
-        
-        $this->EE->cp->set_variable('cp_page_title', lang('member_categories_module_name'));
+
+        if (version_compare(APP_VER, '2.6.0', '>='))
+        {
+        	$this->EE->view->cp_page_title = lang('member_categories_module_name');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('member_categories_module_name'));
+        }
         
     	return $this->EE->load->view('index', $vars, TRUE);
 	
@@ -307,8 +316,6 @@ class Member_categories_mcp {
             'member_group'	=> $query->row('group_title'),
             'categories'	=> $categories_checkboxes
     		);
-
-        $this->EE->cp->set_variable('cp_page_title', lang('member_categories_module_name'));
         
     	return $this->EE->load->view('edit', $vars, TRUE);
 	
@@ -430,8 +437,6 @@ class Member_categories_mcp {
             'assign_parent'	=> form_dropdown('assign_parent', $yesno, $this->settings[$site_id]['assign_parent']),
             'category_groups'	=> form_multiselect('category_groups[]', $category_groups, $this->settings[$site_id]['category_groups'])
     		);
-    	
-        $this->EE->cp->set_variable('cp_page_title', lang('member_categories_module_name'));
         
     	return $this->EE->load->view('settings', $vars, TRUE);
 	
@@ -461,6 +466,139 @@ class Member_categories_mcp {
         $this->EE->db->update('modules', array('settings' => serialize($settings)));
         
         $this->EE->session->set_flashdata('message_success', $this->EE->lang->line('settings_updated'));
+        
+        $this->EE->functions->redirect(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=member_categories'.AMP.'method=index');
+    }
+    
+    
+    
+    function mass_assign()
+    {
+        $this->EE->load->helper('form');
+        
+        $total_members = $this->EE->db->count_all('members');
+        
+        $member_field_list_items = array();
+        $this->EE->db->select('member_id, screen_name');
+        $this->EE->db->from('members');
+        if ($total_members > $this->member_limit)
+        {
+            $this->EE->db->limit($this->member_limit);
+        }
+        $q = $this->EE->db->get();
+        foreach ($q->result_array() as $row)
+        {
+            $member_field_list_items[$row['member_id']] = $row['screen_name'];
+        }
+        
+        $vars = array();        
+        
+        $theme_folder_url = trim($this->EE->config->item('theme_folder_url'), '/').'/third_party/member_categories/';
+        $this->EE->cp->add_to_foot('<link type="text/css" href="'.$theme_folder_url.'ui.multiselect.css" rel="stylesheet" />');
+        $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_folder_url.'plugins/localisation/jquery.localisation-min.js"></script>');
+        $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_folder_url.'plugins/blockUI/jquery.blockUI.js"></script>');
+        $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_folder_url.'ui.multiselect.js"></script>');
+   
+        $js = "";
+        if ($total_members > $this->member_limit)
+        {
+            $act = $this->EE->db->query("SELECT action_id FROM exp_actions WHERE class='Member_categories' AND method='find_members'");
+            $remoteUrl = trim($this->EE->config->item('site_url'), '/').'/?ACT='.$act->row('action_id');
+            $js .= "
+            $('#member_categories__members').multiselect({ droppable: 'none', sortable: 'none', remoteUrl: '$remoteUrl' });
+            ";
+        }
+        else
+        {
+            $js .= "
+            $('#member_categories__members').multiselect({ droppable: 'none', sortable: 'none' });
+            ";
+        }
+        
+        $vars['fields']['members'] = form_multiselect('members[]', $member_field_list_items, array(), 'id="member_categories__members"');
+
+        $category_field_list_items = array();
+		$this->EE->db->select('cat_id, cat_name');
+        $this->EE->db->from('categories');
+        $this->EE->db->order_by('cat_order', 'asc'); 
+        $query = $this->EE->db->get();
+        foreach ($query->result() as $obj)
+        {
+           $category_field_list_items[$obj->cat_id] = $obj->cat_name;
+        }
+        
+        $vars['fields']['categories'] = form_multiselect('categories[]', $category_field_list_items, array(), 'id="member_categories__categories"');
+        
+        $js .= "
+        $('#member_categories__categories').multiselect({ droppable: 'none', sortable: 'none' });
+        ";
+        
+        $this->EE->javascript->output($js);
+        $this->EE->javascript->compile();
+        
+        return $this->EE->load->view('mass_assign', $vars, TRUE);	
+    }
+    
+    
+    function do_mass_assign()
+    {
+        if (empty($_POST['categories']) || empty($_POST['members']))
+        {
+            show_error(lang('do_selection'));
+        }
+        
+        foreach ($_POST['members'] as $member_id)
+        {
+            $data = array();
+
+            foreach ($_POST['categories'] as $category_id)
+            {
+                $data[] = array(
+                            'cat_id'    => $category_id,
+                            'member_id' => $member_id
+                        );
+                
+                if ($this->settings[$this->EE->config->item('site_id')]['assign_parent'] == 'y')
+                {
+                    do 
+                    {
+                        $this->EE->db->select('parent_id');
+                        $this->EE->db->from('categories');
+                        $this->EE->db->where('cat_id', $category_id);
+                        $q = $this->EE->db->get();
+                        if ($q->num_rows()==0)
+                        {
+                            continue;
+                        }
+                        $category_id = $q->row('parent_id');
+                        if ($category_id!=0)
+                        {
+                            $data[] = array(
+                                'cat_id' => $category_id,
+                                'member_id' => $member_id
+                            );
+                        }
+                    }
+                    while ($category_id!=0);
+                }
+    
+            }
+    
+            $data = array_intersect_key($data, array_unique(array_map('serialize', $data)));
+            
+            //remove duplicates
+            foreach ($data as $arr)
+            {
+                $this->EE->db->where('cat_id', $arr['cat_id']);
+                $this->EE->db->where('member_id', $arr['member_id']);
+                $this->EE->db->delete('category_members');
+            }
+            
+            $this->EE->db->insert_batch('category_members', $data);
+            
+        }
+        
+        $this->EE->session->set_flashdata('message_success', $this->EE->lang->line('categories_assigned'));
         
         $this->EE->functions->redirect(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=member_categories'.AMP.'method=index');
     }
