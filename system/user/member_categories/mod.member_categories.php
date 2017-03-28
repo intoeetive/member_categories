@@ -322,7 +322,14 @@ class Member_categories {
         }
         $sort = (ee()->TMPL->fetch_param('sort')=='desc')?'desc':'asc';
         $order = (ee()->TMPL->fetch_param('order_by')=='order')?'cat_order':'cat_name';
-        ee()->db->order_by('categories.group_id, categories.parent_id, categories.'.$order, $sort);
+        if (ee()->TMPL->fetch_param('sort_by_tree')!='no') 
+        {
+            ee()->db->order_by('categories.group_id, categories.parent_id, categories.'.$order, $sort);
+        }
+        else
+        {
+            ee()->db->order_by('categories.'.$order, $sort);
+        }
         $q = ee()->db->get();
         if ($q->num_rows()==0)
         {

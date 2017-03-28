@@ -104,7 +104,7 @@ class Member_categories_ext {
     {
         $ids = array();
 		
-		foreach (ee()->input->post('delete') as $key => $val)
+		foreach (ee()->input->post('selection') as $key => $val)
 		{		
 			if ($val != '')
 			{

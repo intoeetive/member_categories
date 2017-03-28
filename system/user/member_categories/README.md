@@ -111,6 +111,7 @@ This member belongs to categories:
 - `{category_group}` - you can restrict output to display only categories from certain groups. Provide one or several group IDs (seperate multiple values with a pipe, ex. category_group="2|3|12")
 - `{backspace}` - number of character to be removed from the end of tag contents on last iteration
 - `{order_by="order"}` - sort categories by category order. If omited, they will be sorted by category name
+- `{sort_by_tree="no"}` - if specified, sorting will not respect category group and parents
 - `{sort}` - sorting direction (asc, desc)
 - `{errors="off"}` - if specified, all error messages will be suppressed
 

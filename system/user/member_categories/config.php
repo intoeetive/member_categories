@@ -3,7 +3,7 @@
 if ( ! defined('MEMBER_CATEGORIES_ADDON_NAME'))
 {
 	define('MEMBER_CATEGORIES_ADDON_NAME',         'Member categories');
-	define('MEMBER_CATEGORIES_ADDON_VERSION',      '3.0.0');
+	define('MEMBER_CATEGORIES_ADDON_VERSION',      '3.0.2');
 }
 
 $config['name']=MEMBER_CATEGORIES_ADDON_NAME;
