@@ -26,6 +26,8 @@ class Member_categories_mcp {
     var $menu = array();
     
     var $settings = array();
+
+    private $group_id_field = 'group_id';
     
     function __construct() 
     { 
@@ -43,7 +45,9 @@ class Member_categories_mcp {
 			'title' => lang('member_categories_module_name'),
 			//'form_url' => ee('CP/URL', 'addons/settings/member_categories/members'),
 			//'search_button_value' => lang('btn_search_files')
-		);   
+        );   
+        
+        $this->group_id_field = version_compare(APP_VER, '6.0', '>=') ? 'role_id' : 'group_id';
     } 
     
     public function index()
@@ -59,12 +63,21 @@ class Member_categories_mcp {
 		
     	$vars = array();
 
-        $member_groups = ee('Model')
-            ->get('MemberGroup')
-            ->fields('group_id', 'group_title')
-            ->all()
-            ->getDictionary('group_id', 'group_title');
-        $member_groups[] = lang('all_groups');
+        if (version_compare(APP_VER, '6.0', '>=')) {
+            $member_groups = ee('Model')
+                ->get('Role')
+                ->fields('role_id', 'name')
+                ->all()
+                ->getDictionary('role_id', 'name');
+            $member_groups[] = lang('all_groups');
+        } else {
+            $member_groups = ee('Model')
+                ->get('MemberGroup')
+                ->fields('group_id', 'group_title')
+                ->all()
+                ->getDictionary('group_id', 'group_title');
+            $member_groups[] = lang('all_groups');
+        }
         
         $categories = ee('Model')
             ->get('Category')
@@ -87,7 +100,7 @@ class Member_categories_mcp {
         
         if ($filter_values['group_id']!='')
         {
-            ee()->db->where('members.group_id', $filter_values['group_id']);
+            ee()->db->where('members.'.$this->group_id_field, $filter_values['group_id']);
         }
         if ($filter_values['cat_id']!='')
         {
@@ -118,12 +131,14 @@ class Member_categories_mcp {
         $sort_col = ee()->input->get_post('sort_col') ? ee()->input->get_post('sort_col') : 'member_id';
         $sort_dir = ee()->input->get_post('sort_dir') ? ee()->input->get_post('sort_dir') : 'desc';
         
+        
+
         ee()->db->distinct();
-        ee()->db->select('members.member_id, username, email, group_id');
+        ee()->db->select('members.member_id, username, email, '.$this->group_id_field);
         ee()->db->from('members');
         if ($filter_values['group_id']!='')
         {
-            ee()->db->where('members.group_id', $filter_values['group_id']);
+            ee()->db->where('members.'.$this->group_id_field, $filter_values['group_id']);
         }
         if ($filter_values['member_id']!='')
         {
@@ -181,7 +196,7 @@ class Member_categories_mcp {
             	$data[$i]['username'] = $row['username'];
             }
             $data[$i]['username'] .= '<br><span class="meta-info">&mdash; <a href="' . ee('CP/URL')->make('utilities/communicate/member/' . $row['member_id']) . '">'.$row['email'].'</a></span>';
-            $data[$i]['group_id'] = $member_groups[$row['group_id']];
+            $data[$i]['group_id'] = isset($member_groups[$row[$this->group_id_field]]) ? $member_groups[$row[$this->group_id_field]] : $row[$this->group_id_field];
             $data[$i]['categories'] = '';
             ee()->db->select('cat_name');
             ee()->db->from('category_members');
@@ -221,7 +236,7 @@ class Member_categories_mcp {
 
 		$vars['table'] = $table->viewData($fiter_url);
 		$vars['filter_url'] = $vars['table']['base_url'];
-        $vars['edit_url'] = ee('CP/URL', 'addons/settings/member_categories/edit');;
+        $vars['edit_url'] = ee('CP/URL', 'addons/settings/member_categories/edit');
 
 		$vars['pagination'] = ee('CP/Pagination', (int)$total)
 			->perPage($filter_values['perpage'])
@@ -391,11 +406,19 @@ class Member_categories_mcp {
             }
         }
         
-        $members = ee('Model')
-            ->get('Member')
-            ->fields('member_id', 'username', 'screen_name', 'email', 'group_id', 'MemberGroup')
-            ->filter('member_id', 'IN', $member_ids)
-            ->all();
+        if (version_compare(APP_VER, '6.0', '>=')) {
+            $members = ee('Model')
+                ->get('Member')
+                ->fields('member_id', 'username', 'screen_name', 'email', 'group_id', 'MemberGroup')
+                ->filter('member_id', 'IN', $member_ids)
+                ->all();
+        } else {
+            $members = ee('Model')
+                ->get('Member')
+                ->fields('member_id', 'username', 'screen_name', 'email', 'role_id', 'PrimaryRole')
+                ->filter('member_id', 'IN', $member_ids)
+                ->all();
+        }
         
         $vars = array(
             'base_url'      => ee('CP/URL', 'addons/settings/member_categories/edit'),
@@ -412,10 +435,12 @@ class Member_categories_mcp {
 			->all();
         
         // Get the category tree with a single query
-		ee()->load->library('datastructures/tree');
+        ee()->load->library('datastructures/tree');
+        $i = 0;
         foreach ($CategoryGroupColl as $CategoryGroup)
         {
-            $vars['categories_set'][] = $CategoryGroup->getCategoryTree(ee()->tree);
+            $vars['categories_set'][$i] = $CategoryGroup->getCategoryTree(ee()->tree);
+            $vars['cat_group_id'][$i++] = $CategoryGroup->getId();
         }
         
         return array(

@@ -1,7 +1,7 @@
-<div class="box">
-<h1><?=lang('assign_to_members')?></h1>
+<div class="panel box">
+<h1 class="panel-heading"><?=lang('assign_to_members')?></h1>
 
-<?=form_open($base_url, ' class="settings"', (isset($form_hidden)) ? $form_hidden : array())?>
+<?=form_open($base_url, ' class="panel-body settings"', (isset($form_hidden)) ? $form_hidden : array())?>
 
 
 <?=ee('CP/Alert')->get('member_categories')?>
@@ -11,7 +11,7 @@
         <?php foreach ($members as $member): ?>
             <h3><?=$member->username?></h3>
 			<em><?=$member->email?></em>
-            <em><?=$member->MemberGroup->group_title?></em>
+            <em><?=version_compare(APP_VER, '6.0', '>=') ? $member->PrimaryRole->name : $member->MemberGroup->group_title?></em>
             <?=form_hidden('member_id[]', $member->member_id)?>
             <br />
         <?php endforeach ?>
@@ -20,7 +20,7 @@
     
     <div class="col w-16 relate-wrap">
 
-<?php foreach ($categories_set as $categories): ?>
+<?php foreach ($categories_set as $i => $categories): ?>
 
 		<div class="tbl-list-wrap">
 
@@ -33,7 +33,7 @@
 						<li>
 							<div class="tbl-row no-results">
 								<div class="none">
-									<p><?=lang('categories_not_found')?> <a class="btn action" href="<?=ee('CP/URL')->make('channels/cat/create-cat/'.$cat_group->group_id)?>"><?=lang('create_category_btn')?></a></p>
+									<p><?=lang('categories_not_found')?> <a class="btn action" href="<?=ee('CP/URL')->make('channels/cat/create-cat/'.$cat_group_id[$i])?>"><?=lang('create_category_btn')?></a></p>
 								</div>
 							</div>
 						</li>
